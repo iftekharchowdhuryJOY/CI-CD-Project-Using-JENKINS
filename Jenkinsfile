@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = 'flask-ci-app'
+    }
+
     stages {
         stage('Clone') {
             steps {
@@ -25,16 +29,35 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t flask-ci-app .'
+                sh 'docker build -t ${IMAGE_NAME}:dev .'
             }
         }
 
-        stage('Run App in Docker') {
+        stage('Deploy to Dev'){
             steps {
-                sh 'docker stop flask-ci-app || true && docker rm flask-ci-app || true'
-                sh 'docker run -d --name flask-ci-app -p 5000:5000 flask-ci-app'
+                sh '''
+                    docker stop flask-dev || true && docker rm flask-dev || true
+                    docker run -d --name flask-dev -p 5001:5000 flask-ci-app:dev
+                '''
             }
         }
+
+        stage('Promote to staging'){
+            when {
+                beforeAgent true 
+                expression {
+                    return input(message: 'Promote to staging?', ok: 'Promote')
+                }
+            }
+            steps {
+                sh ''' 
+                    docker tag flask-ci-app:dev flask-ci-app:staging
+                    docker stop flask-staging || true && docker rm flask-staging || true
+                    docker run -d --name flask-staging -p 5002:5000 flask-ci-app:staging
+                '''
+            }
+        }
+
     }
 
     post {
