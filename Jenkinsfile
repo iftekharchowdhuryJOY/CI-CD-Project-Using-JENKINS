@@ -42,21 +42,19 @@ pipeline {
             }
         }
 
-        stage('Promote to Staging') {
-            when {
-                beforeAgent true
-                expression {
-                    return input(message: 'Promote to staging?', ok: 'Promote')
-                }
-            }
-            steps {
-                sh '''
-                    docker tag flask-ci-app:dev flask-ci-app:staging
-                    docker stop flask-staging || true && docker rm flask-staging || true
-                    docker run -d --name flask-staging -p 5002:5000 flask-ci-app:staging
-                '''
-            }
+       stage('Promote to Staging') {
+    steps {
+        script {
+            input message: '🚀 Promote to staging?', ok: 'Promote'
         }
+        sh '''
+            docker tag flask-ci-app:dev flask-ci-app:staging
+            docker stop flask-staging || true && docker rm flask-staging || true
+            docker run -d --name flask-staging -p 5002:5000 flask-ci-app:staging
+        '''
+    }
+}
+
     }
 
     post {
