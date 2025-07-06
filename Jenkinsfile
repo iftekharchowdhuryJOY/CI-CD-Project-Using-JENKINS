@@ -16,7 +16,10 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                sh 'pytest'
+                sh '''
+                    export PYTHONPATH=$PWD
+                    pytest
+                '''
             }
         }
 
