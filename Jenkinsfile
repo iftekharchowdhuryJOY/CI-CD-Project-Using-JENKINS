@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Clone') {
             steps {
-                git branch: 'main', url: 'https://github.com/iftekharchowdhuryJOY/CI-CD-Project-Using-JENKINS.git'
+                git 'https://github.com/iftekharchowdhuryJOY/CI-CD-Project-Using-JENKINS.git'
             }
         }
 
@@ -29,11 +29,11 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t ${IMAGE_NAME}:dev .'
+                sh "docker build -t ${IMAGE_NAME}:dev ."
             }
         }
 
-        stage('Deploy to Dev'){
+        stage('Deploy to Dev') {
             steps {
                 sh '''
                     docker stop flask-dev || true && docker rm flask-dev || true
@@ -42,30 +42,29 @@ pipeline {
             }
         }
 
-        stage('Promote to staging'){
+        stage('Promote to Staging') {
             when {
-                beforeAgent true 
+                beforeAgent true
                 expression {
                     return input(message: 'Promote to staging?', ok: 'Promote')
                 }
             }
             steps {
-                sh ''' 
+                sh '''
                     docker tag flask-ci-app:dev flask-ci-app:staging
                     docker stop flask-staging || true && docker rm flask-staging || true
                     docker run -d --name flask-staging -p 5002:5000 flask-ci-app:staging
                 '''
             }
         }
-
     }
 
     post {
         always {
-            echo 'Pipeline finished running.'
+            echo '🚦 Pipeline finished.'
         }
         success {
-            echo '✅ Pipeline succeeded!'
+            echo '✅ All stages passed!'
         }
         failure {
             echo '❌ Pipeline failed.'
